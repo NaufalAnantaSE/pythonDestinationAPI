@@ -38,7 +38,7 @@ class Destination(db.Model):
         }
         
 with app.app_context():
-    AUTO_SYNC = True  
+    AUTO_SYNC = False  
     if AUTO_SYNC == True:
         print("AUTO SYNC ENABLED: dropping & recreating tables")
         db.drop_all()   
@@ -64,6 +64,34 @@ def add_destination():
     db.session.commit()
     return jsonify(new_destination.to_dict()), 201
 
+@app.route('/destinations', methods=['GET'])
+def get_destinations():
+    destinations = Destination.query.all()
+    return jsonify([destination.to_dict() for destination in destinations])
+
+@app.route('/destinations/<int:id>', methods=['GET'])
+def get_destination(id):
+    destination = Destination.query.get_or_404(id)
+    return jsonify(destination.to_dict())
+
+@app.route('/destinations/<int:id>', methods=['PUT'])
+def update_destination(id):
+    destination = Destination.query.get_or_404(id)
+    data = request.get_json()
+    destination.name = data['name']
+    destination.description = data['description']
+    destination.country = data['country']
+    destination.city = data['city']
+    destination.rating = data['rating']
+    db.session.commit()
+    return jsonify(destination.to_dict())
+
+@app.route('/destinations/<int:id>', methods=['DELETE'])
+def delete_destination(id):
+    destination = Destination.query.get_or_404(id)
+    db.session.delete(destination)
+    db.session.commit()
+    return jsonify({"message": "Destination deleted successfully"})
 
 if __name__ == '__main__':
     app.run(debug=True)
